@@ -20,7 +20,7 @@ class PackageCreate(BaseModel):
     weight: float
     sender_id: int
     recipient_id: int
-    status: Status
+    status: Status = Status.IN_WAREHOUSE
 
 
 class DefaultUser(BaseModel):
