@@ -4,9 +4,7 @@ from services.package_service import PackageService
 from schemas.schemas import Package, PackageCreate
 
 
-def create_package_router(
-        get_service
-) -> APIRouter:
+def create_package_router(get_service) -> APIRouter:
     router = APIRouter()
 
     @router.get("/{package_id}", response_model=Package)

@@ -32,8 +32,11 @@ class DefaultUserService:
     async def delete_default_user(self, default_user_id: int):
         return await self._database.delete_default_user(default_user_id)
 
-    async def read_default_user(self, default_user_id: int):
+    async def read_default_user_by_id(self, default_user_id: int):
         return await self._database.get_default_user_by_id(default_user_id)
+
+    async def read_default_user_by_login(self, default_user_login: str):
+        return await self._database.get_default_user_by_login(default_user_login)
 
     async def update_default_user(self, default_user_id: int, default_user: DefaultUserCreate):
         return await self._database.update_default_user(default_user_id, default_user)

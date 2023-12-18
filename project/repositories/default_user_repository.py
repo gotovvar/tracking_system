@@ -18,6 +18,10 @@ class DefaultUserRepository:
         stmt = select(DefaultUser).where(DefaultUser.default_user_id == default_user_id)
         return await self.session.scalar(stmt)
 
+    async def get_default_user_by_login(self, default_user_login: str) -> DefaultUser:
+        stmt = select(DefaultUser).where(DefaultUser.login == default_user_login)
+        return await self.session.scalar(stmt)
+
     async def create_default_user(self, default_user: DefaultUserCreate) -> DefaultUser:
         async with self.session.begin_nested():
             created_default_user = DefaultUser(

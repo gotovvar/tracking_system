@@ -1,7 +1,5 @@
-from fastapi import FastAPI, Depends
-from repositories.default_user_repository import DefaultUserRepository
-from database.database import get_async_session
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
+from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from database.database import async_engine
 from services.default_user_service import DefaultUserService
 from services.administrator_service import AdminService
@@ -9,6 +7,7 @@ from services.package_service import PackageService
 from routers.default_user_router import create_default_user_router
 from routers.package_router import create_package_router
 from routers.admin_router import create_admin_router
+from routers.auth import create_auth_router
 
 app = FastAPI(
     title='tracking-system'
@@ -46,6 +45,8 @@ app.include_router(package_route, prefix="/package", tags=["package"])
 admin_route = create_admin_router(get_administrator_service)
 app.include_router(admin_route, prefix="/administrator", tags=["administrator"])
 
+auth_router = create_auth_router(get_user_service, get_administrator_service)
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 """
 class DefaultUserRouter(APIRouter):

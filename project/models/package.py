@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Enum, Double, ForeignKey
+from sqlalchemy import Column, Integer, Enum, Float, ForeignKey
 from database.database import Base
 from sqlalchemy.orm import relationship
 from enums.status import Status
@@ -9,7 +9,7 @@ class Package(Base):
 
     package_id = Column(Integer, primary_key=True, autoincrement=True)
     number = Column(Integer, nullable=False)
-    weight = Column(Double, nullable=False)
+    weight = Column(Float, nullable=False)
     sender_id = Column(Integer, ForeignKey('default_user.default_user_id'))
     sender = relationship('DefaultUser', foreign_keys=[sender_id],
                           backref='sent_packages', cascade='save-update', single_parent=True)

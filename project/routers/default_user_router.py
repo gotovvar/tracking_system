@@ -4,17 +4,22 @@ from schemas.schemas import DefaultUserCreate, DefaultUser
 from typing import List
 
 
-def create_default_user_router(
-        get_service
-) -> APIRouter:
+def create_default_user_router(get_service) -> APIRouter:
     router = APIRouter()
 
     @router.get("/{default_user_id}", response_model=DefaultUser)
-    async def read_default_user(
+    async def read_default_user_by_id(
             default_user_id: int,
             service: DefaultUserService = Depends(get_service)
     ):
-        return await service.read_default_user(default_user_id)
+        return await service.read_default_user_by_id(default_user_id)
+
+    @router.get("/{default_user_login}", response_model=DefaultUser)
+    async def read_default_user_by_login(
+            default_user_login: str,
+            service: DefaultUserService = Depends(get_service)
+    ):
+        return await service.read_default_user_by_login(default_user_login)
 
     @router.get("/", response_model=List[DefaultUser])
     async def read_all_default_users(

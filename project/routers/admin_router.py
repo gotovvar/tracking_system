@@ -4,17 +4,22 @@ from services.administrator_service import AdminService
 from schemas.schemas import Administrator, AdministratorCreate
 
 
-def create_admin_router(
-        get_service
-) -> APIRouter:
+def create_admin_router(get_service) -> APIRouter:
     router = APIRouter()
 
     @router.get("/{administrator_id}", response_model=Administrator)
-    async def read_administrator(
+    async def read_administrator_by_id(
             administrator_id: int,
             service: AdminService = Depends(get_service)
     ):
-        return await service.read_administrator(administrator_id)
+        return await service.read_administrator_by_id(administrator_id)
+
+    @router.get("/{administrator_login}", response_model=Administrator)
+    async def read_administrator_by_login(
+            administrator_login: str,
+            service: AdminService = Depends(get_service)
+    ):
+        return await service.read_administrator_by_login(administrator_login)
 
     @router.get("/", response_model=List[Administrator])
     async def read_all_administrators(
@@ -28,12 +33,12 @@ def create_admin_router(
         return await service.create_administrator(administrator)
 
     @router.put("/", response_model=Administrator)
-    async def update_package(administrator_id: int, administrator: AdministratorCreate,
-                             service: AdminService = Depends(get_service)):
+    async def update_administrator(administrator_id: int, administrator: AdministratorCreate,
+                                   service: AdminService = Depends(get_service)):
         return await service.update_administrator(administrator_id, administrator)
 
     @router.delete("/{administrator_id}", response_model=Administrator)
-    async def delete_package(
+    async def delete_administrator(
             administrator_id: int,
             service: AdminService = Depends(get_service)
     ):

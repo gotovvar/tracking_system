@@ -32,8 +32,11 @@ class AdminService:
     async def delete_administrator(self, administrator_id: int):
         return await self._database.delete_administrator(administrator_id)
 
-    async def read_administrator(self, administrator_id: int):
+    async def read_administrator_by_id(self, administrator_id: int):
         return await self._database.get_administrator_by_id(administrator_id)
+
+    async def read_administrator_by_login(self, administrator_login: str):
+        return await self._database.get_administrator_by_login(administrator_login)
 
     async def update_administrator(self, administrator_id: int, administrator: AdministratorCreate):
         return await self._database.update_administrator(administrator_id, administrator)

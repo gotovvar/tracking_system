@@ -18,6 +18,10 @@ class AdminRepository:
         stmt = select(Administrator).where(Administrator.administrator_id == administrator_id)
         return await self.session.scalar(stmt)
 
+    async def get_administrator_by_login(self, administrator_login: str) -> Administrator:
+        stmt = select(Administrator).where(Administrator.login == administrator_login)
+        return await self.session.scalar(stmt)
+
     async def create_administrator(self, administrator: AdministratorCreate) -> Administrator:
         async with self.session.begin_nested():
             created_administrator = Administrator(
