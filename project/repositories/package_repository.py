@@ -25,7 +25,7 @@ class PackageRepository:
                 weight=package.weight,
                 sender_id=package.sender_id,
                 recipient_id=package.recipient_id,
-                status=package.role)
+                status=package.status)
             self.session.add(created_package)
             await self.session.commit()
             return created_package

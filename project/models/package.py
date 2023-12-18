@@ -11,6 +11,9 @@ class Package(Base):
     number = Column(Integer, nullable=False)
     weight = Column(Double, nullable=False)
     sender_id = Column(Integer, ForeignKey('default_user.default_user_id'))
+    sender = relationship('DefaultUser', foreign_keys=[sender_id],
+                          backref='sent_packages', cascade='save-update', single_parent=True)
     recipient_id = Column(Integer, ForeignKey('default_user.default_user_id'))
-    default_user = relationship('DefaultUser', backref='package', cascade='save-update', single_parent=True)
+    recipient = relationship('DefaultUser', foreign_keys=[recipient_id],
+                             backref='received_packages', cascade='save-update', single_parent=True)
     status = Column(Enum(Status), default=Status.IN_WAREHOUSE)
