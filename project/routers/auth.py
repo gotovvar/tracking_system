@@ -5,32 +5,28 @@ from fastapi.responses import ORJSONResponse
 from typing import Union
 
 import jwt
-from pydantic import BaseModel
+from fastapi.security import OAuth2PasswordBearer
+from jwt import PyJWTError
 from passlib.context import CryptContext
 from config import SECRET_AUTH, AUTH_ALGORITHM, AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
 from enums.roles import Roles
-from services.default_user_service import DefaultUserService
-from services.administrator_service import AdminService
+from services.user_service import UserService
 from schemas.schemas import DefaultUserCreate, DefaultUser, Administrator
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
+def create_auth_router(get_user_service) -> APIRouter:
     router = APIRouter()
 
-    @router.post("/register/{name}/{surname}/{email}/{password}/")
+    @router.post("/register/{name}/{surname}/{login}/{password}")
     async def register_default_user(
             name: str,
             surname: str,
             login: str,
             password: str,
-            service: DefaultUserService = Depends(get_user_service),
+            service: UserService = Depends(get_user_service),
     ):
         hashed_password = hash_password(password)
         default_user = DefaultUserCreate(
@@ -46,10 +42,9 @@ def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
     async def login_user(
         login: str,
         password: str,
-        user_service: DefaultUserService = Depends(get_user_service),
-        admin_service: AdminService = Depends(get_admin_service)
+        user_service: UserService = Depends(get_user_service)
     ):
-        user = await _authenticate_user(login, password, user_service, admin_service)
+        user = await _authenticate_user(login, password, user_service)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -71,9 +66,36 @@ def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
         )
         return response
 
+    async def get_current_user(
+            token: str = Depends(oauth2_scheme),
+            user_service: UserService = Depends(get_user_service)
+    ) -> Union[DefaultUser, Administrator]:
+        try:
+            payload = jwt.decode(token, SECRET_AUTH, algorithms=[AUTH_ALGORITHM])
+            login: str = payload.get("sub")
+            if login is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid authentication credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            user = await _get_user(login, user_service)
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return user
+        except PyJWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
     async def _get_user(login: str,
-                        user_service: DefaultUserService = Depends(get_user_service),
-                        admin_service: AdminService = Depends(get_admin_service)
+                        user_service: UserService = Depends(get_user_service)
                         ) -> Union[Administrator, DefaultUser, False]:
         try:
             result = await user_service.read_default_user_by_login(default_user_login=login)
@@ -82,7 +104,7 @@ def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
         except:
             pass
         try:
-            result = await admin_service.read_administrator_by_login(administrator_login=login)
+            result = await user_service.read_administrator_by_login(administrator_login=login)
             if result:
                 return result
         except:
@@ -93,10 +115,9 @@ def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
         return pwd_context.verify(plain_password, hashed_password)
 
     async def _authenticate_user(login: str, password: str,
-                                 user_service: DefaultUserService = Depends(get_user_service),
-                                 admin_service: AdminService = Depends(get_admin_service)
+                                 user_service: UserService = Depends(get_user_service)
                                  ) -> Union[Administrator, DefaultUser, False]:
-        user = await _get_user(login, user_service, admin_service)
+        user = await _get_user(login, user_service)
         if not user:
             return False
 
@@ -114,6 +135,10 @@ def create_auth_router(get_user_service, get_admin_service) -> APIRouter:
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_AUTH, algorithm=AUTH_ALGORITHM)
         return encoded_jwt
+
+    @router.get("/current_user")
+    async def get_current_user(current_user: Union[DefaultUser, Administrator] = Depends(get_current_user)):
+        return current_user
 
     @router.post("/logout")
     async def logout_user():

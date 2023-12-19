@@ -24,7 +24,7 @@ class PackageCreate(BaseModel):
 
 
 class DefaultUser(BaseModel):
-    default_user_id: int
+    id: int
     name: str
     surname: str
     login: str
@@ -41,7 +41,7 @@ class DefaultUserCreate(BaseModel):
 
 
 class Administrator(BaseModel):
-    administrator_id: int
+    id: int
     name: str
     surname: str
     login: str

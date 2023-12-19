@@ -1,26 +1,26 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from database.database import async_engine
-from services.default_user_service import DefaultUserService
-from services.administrator_service import AdminService
+from services.user_service import UserService
 from services.package_service import PackageService
-from routers.default_user_router import create_default_user_router
+from routers.user_router import create_user_router
 from routers.package_router import create_package_router
-from routers.admin_router import create_admin_router
 from routers.auth import create_auth_router
+from routers.pages import create_pages_router
 
 app = FastAPI(
     title='tracking-system'
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "DELETE", "PATCH"],
+    allow_headers=["*"],
+)
+
 SessionLocal = async_sessionmaker(expire_on_commit=False, bind=async_engine)
-
-
-async def get_administrator_service():
-    async with SessionLocal() as session:
-        async with session.begin():
-            service = AdminService(session)
-            yield service
 
 
 async def get_package_service():
@@ -33,20 +33,20 @@ async def get_package_service():
 async def get_user_service():
     async with SessionLocal() as session:
         async with session.begin():
-            service = DefaultUserService(session)
+            service = UserService(session)
             yield service
 
-user_router = create_default_user_router(get_user_service)
-app.include_router(user_router, prefix="/default_user", tags=["default_user"])
+user_router = create_user_router(get_user_service)
+app.include_router(user_router, prefix="/user", tags=["user"])
 
 package_route = create_package_router(get_package_service)
 app.include_router(package_route, prefix="/package", tags=["package"])
 
-admin_route = create_admin_router(get_administrator_service)
-app.include_router(admin_route, prefix="/administrator", tags=["administrator"])
+auth_route = create_auth_router(get_user_service)
+app.include_router(auth_route, prefix="/auth", tags=["auth"])
 
-auth_router = create_auth_router(get_user_service, get_administrator_service)
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
+pages_route = create_pages_router(get_user_service)
+app.include_router(pages_route, prefix="/pages", tags=["pages"])
 
 """
 class DefaultUserRouter(APIRouter):

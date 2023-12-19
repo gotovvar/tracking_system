@@ -1,0 +1,60 @@
+{% extends "index.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+    <h1 style="text-align: center">Личный кабинет</h1>
+    <hr>
+    <br>
+    <div style="text-align: center;">
+        <h2>${user.name}</h2>
+        <br>
+        <h2>Логин: <b>${user.login}</b></h2>
+        <br>
+        <#if user.isAdmin()>
+            <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+               href="/profile/correctionRequests">
+                Запросы на корректировку данных
+            </a><br>
+            <form id="timeReportsForm" action="/profile/timeReports/search" method="get">
+                <input type="hidden" name="_csrf" value="${_csrf.token}"/>
+                <button type="submit" style="text-align: center; width: 100%" class="btn btn-dark mb-3">
+                    Запрос на получение отчетов
+                </button>
+            </form>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+           href="/profile/edit">
+            Редактировать профиль
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+           href="/profile/logTime">
+            Зарегистрировать время
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+           href="/profile/timeReports">
+            Запрос на редактирование времени
+        </a>
+        <form action="/logout" method="post">
+            <input type="hidden" name="_csrf" value="${_csrf.token}"/>
+            <button type="submit" style="text-align: center; width: 100%" class="btn btn-danger mb-2">
+                Выйти из аккаунта
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/auth/current_user');
+                const user = await response.json();
+
+                document.getElementById('user-name').textContent = user.name;
+                document.getElementById('user-login').textContent = user.login;
+                // Обновите остальные элементы, если необходимо
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        });
+    </script>
+{% endblock %}
