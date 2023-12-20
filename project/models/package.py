@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Enum, Float, ForeignKey
 from database.database import Base
 from sqlalchemy.orm import relationship
-from enums.status import Status
+from utils.status import Status
 
 
 class Package(Base):

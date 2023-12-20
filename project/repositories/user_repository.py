@@ -4,7 +4,7 @@ from typing import Union, List
 from models.default_user import DefaultUser
 from models.administrator import Administrator
 from schemas.schemas import DefaultUserCreate, AdministratorCreate
-from enums.roles import Roles
+from utils.roles import Roles
 
 
 class UserRepository:

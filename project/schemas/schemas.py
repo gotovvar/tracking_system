@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from enums.status import Status
-from enums.roles import Roles
+from utils.status import Status
+from utils.roles import Roles
 
 
 class Package(BaseModel):

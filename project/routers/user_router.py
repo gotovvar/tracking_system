@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from services.user_service import UserService
 from schemas.schemas import DefaultUserCreate, DefaultUser, Administrator, AdministratorCreate
 from typing import List
-from enums.roles import Roles
+from utils.roles import Roles
 
 
 def create_user_router(get_service) -> APIRouter:

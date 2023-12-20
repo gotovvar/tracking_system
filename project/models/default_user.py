@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Enum
 from models.user import User
-from enums.roles import Roles
+from utils.roles import Roles
 
 
 class DefaultUser(User):

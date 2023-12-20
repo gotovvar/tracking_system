@@ -8,9 +8,9 @@
     <hr>
     <br>
     <div style="text-align: center;">
-        <h2>${user.name}</h2>
+        <h2 id="user-name"></h2>
         <br>
-        <h2>Логин: <b>${user.login}</b></h2>
+        <h2>Логин: <b id="user-login"></b></h2>
         <br>
         <#if user.isAdmin()>
             <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
@@ -35,26 +35,49 @@
            href="/profile/timeReports">
             Запрос на редактирование времени
         </a>
-        <form action="/logout" method="post">
+        <form id="logoutForm">
             <input type="hidden" name="_csrf" value="${_csrf.token}"/>
-            <button type="submit" style="text-align: center; width: 100%" class="btn btn-danger mb-2">
+            <button id="logoutButton" type="submit" style="text-align: center; width: 100%" class="btn btn-danger mb-2">
                 Выйти из аккаунта
             </button>
         </form>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetch('/auth/current_user');
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch('/auth/current_user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
+            if (response.ok) {
                 const user = await response.json();
 
                 document.getElementById('user-name').textContent = user.name;
                 document.getElementById('user-login').textContent = user.login;
-                // Обновите остальные элементы, если необходимо
-            } catch (error) {
-                console.error('Error fetching user data:', error);
+
+                document.getElementById('logoutButton').addEventListener('click', async function(event) {
+                    event.preventDefault();
+                    try {
+                        const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
+                        if (logoutResponse.ok) {
+                            localStorage.removeItem('token');
+                            window.location.href = '/pages/login';
+                        } else {
+                            console.error('Logout failed:', logoutResponse.status);
+                        }
+                    } catch (logoutError) {
+                        console.error('Error logging out:', logoutError);
+                    }
+                });
+            } else {
+                console.error('Error fetching user data:', response.status);
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    });
+</script>
 {% endblock %}

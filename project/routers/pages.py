@@ -9,15 +9,15 @@ def create_pages_router(get_service):
     templates = Jinja2Templates(directory="templates")
 
     @router.get("/login")
-    def login(request: Request, service: UserService = Depends(get_service)):
+    def login(request: Request):
         return templates.TemplateResponse("login.html", {"request": request})
 
     @router.get("/registration")
-    def registration(request: Request, service: UserService = Depends(get_service)):
+    def registration(request: Request):
         return templates.TemplateResponse("registration.html", {"request": request})
 
     @router.get("/default_user_profile")
-    def registration(request: Request, service: UserService = Depends(get_service)):
+    def registration(request: Request):
         return templates.TemplateResponse("default_user_personal_account.html", {"request": request})
 
     return router

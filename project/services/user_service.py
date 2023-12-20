@@ -2,7 +2,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from enums.roles import Roles
+from utils.roles import Roles
 from repositories.user_repository import UserRepository
 from schemas.schemas import DefaultUserCreate, AdministratorCreate
 from models.default_user import DefaultUser

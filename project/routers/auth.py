@@ -1,20 +1,24 @@
-from datetime import timedelta, datetime
-
+from pydantic import BaseModel, ConfigDict, ValidationError
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import ORJSONResponse
-from typing import Union
-
+from typing import Union, Annotated
+from utils.auth import get_hash_password, verify_password, create_access_token
 import jwt
 from fastapi.security import OAuth2PasswordBearer
-from jwt import PyJWTError
-from passlib.context import CryptContext
-from config import SECRET_AUTH, AUTH_ALGORITHM, AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
-from enums.roles import Roles
+from fastapi.security import OAuth2PasswordRequestForm
+from config import SECRET_AUTH, AUTH_ALGORITHM
+from utils.roles import Roles
 from services.user_service import UserService
 from schemas.schemas import DefaultUserCreate, DefaultUser, Administrator
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", scheme_name="JWT")
+
+
+class TokenPayload(BaseModel):
+    sub: str = None
+    exp: int = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 def create_auth_router(get_user_service) -> APIRouter:
@@ -28,7 +32,7 @@ def create_auth_router(get_user_service) -> APIRouter:
             password: str,
             service: UserService = Depends(get_user_service),
     ):
-        hashed_password = hash_password(password)
+        hashed_password = get_hash_password(password)
         default_user = DefaultUserCreate(
             name=name,
             surname=surname,
@@ -38,65 +42,59 @@ def create_auth_router(get_user_service) -> APIRouter:
         )
         return await service.create_default_user(default_user)
 
-    @router.post("/login/{login}/{password}")
+    @router.post("/login")
     async def login_user(
-        login: str,
-        password: str,
+        form_data: OAuth2PasswordRequestForm = Depends(),
         user_service: UserService = Depends(get_user_service)
     ):
-        user = await _authenticate_user(login, password, user_service)
+        user = await _authenticate_user(form_data.username, form_data.password, user_service)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token_expires = timedelta(minutes=int(AUTH_ACCESS_TOKEN_EXPIRE_MINUTES))
-        access_token = create_access_token(
-            data={"sub": user.login}, expires_delta=access_token_expires
-        )
-        response = ORJSONResponse(
-            {"access_token": access_token, "token_type": "bearer"}
-        )
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            expires=access_token_expires.total_seconds(),
-            httponly=True,
-        )
-        return response
+        return {"access_token": create_access_token(user.login), "token_type": "bearer"}
 
-    async def get_current_user(
+    async def read_current_user(
             token: str = Depends(oauth2_scheme),
             user_service: UserService = Depends(get_user_service)
-    ) -> Union[DefaultUser, Administrator]:
+    ) -> Union[DefaultUser, Administrator, None]:
         try:
             payload = jwt.decode(token, SECRET_AUTH, algorithms=[AUTH_ALGORITHM])
-            login: str = payload.get("sub")
-            if login is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid authentication credentials",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            user = await _get_user(login, user_service)
-            if user is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User not found",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            return user
-        except PyJWTError:
+            token_data = TokenPayload(**payload)
+        except (jwt.exceptions.DecodeError, ValidationError):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        except jwt.exceptions.ExpiredSignatureError as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        try:
+            user = await _get_user(token_data.sub, user_service)
+        except Exception as e:
+            raise e
+        return user
+
+    @router.get("/current_user")
+    async def get_current_user(current_user: Union[DefaultUser, Administrator] = Depends(read_current_user)):
+        return current_user
+
+    @router.post("/logout")
+    async def logout_user():
+        response = ORJSONResponse({"message": "User has been logged out"})
+        response.delete_cookie(key="access_token")
+
+        return response
 
     async def _get_user(login: str,
                         user_service: UserService = Depends(get_user_service)
-                        ) -> Union[Administrator, DefaultUser, False]:
+                        ) -> Union[Administrator, DefaultUser, None]:
         try:
             result = await user_service.read_default_user_by_login(default_user_login=login)
             if result:
@@ -109,46 +107,21 @@ def create_auth_router(get_user_service) -> APIRouter:
                 return result
         except:
             pass
-        return False
-
-    def __verify_password(plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+        return None
 
     async def _authenticate_user(login: str, password: str,
                                  user_service: UserService = Depends(get_user_service)
-                                 ) -> Union[Administrator, DefaultUser, False]:
+                                 ) -> Union[Administrator, DefaultUser, None]:
         user = await _get_user(login, user_service)
         if not user:
-            return False
+            return None
 
-        if not __verify_password(password, user.password):
-            return False
+        if not verify_password(password, user.password):
+            return None
 
         return user
-
-    def create_access_token(data: dict, expires_delta: timedelta | None = None):
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
-        to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET_AUTH, algorithm=AUTH_ALGORITHM)
-        return encoded_jwt
-
-    @router.get("/current_user")
-    async def get_current_user(current_user: Union[DefaultUser, Administrator] = Depends(get_current_user)):
-        return current_user
-
-    @router.post("/logout")
-    async def logout_user():
-        response = ORJSONResponse({"message": "User has been logged out"})
-        response.delete_cookie(key="access_token")
-
-        return response
 
     return router
 
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+
