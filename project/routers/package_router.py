@@ -7,12 +7,19 @@ from schemas.schemas import Package, PackageCreate
 def create_package_router(get_service) -> APIRouter:
     router = APIRouter()
 
-    @router.get("/{package_id}", response_model=Package)
+    @router.get("/{package_number}", response_model=Package)
     async def read_package(
-            package_id: int,
+            package_number: int,
             service: PackageService = Depends(get_service)
     ):
-        return await service.read_package(package_id)
+        return await service.read_package_by_number(package_number)
+
+    @router.get("/sent/{sender_login}", response_model=List[Package])
+    async def read_all_package_by_sender(
+            sender_login: str,
+            service: PackageService = Depends(get_service)
+    ):
+        return await service.read_all_package_by_sender(sender_login)
 
     @router.get("/", response_model=List[Package])
     async def read_all_packages(

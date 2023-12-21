@@ -1,0 +1,104 @@
+{% extends "index.html" %}
+
+{% block head%}
+<title xmlns="http://www.w3.org/1999/html">Авторизация</title>
+<style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 400px;
+            height: 400px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <h1 style="text-align: center">Отследить посылку</h1>
+    <hr>
+    <form id="searchForm">
+        <div class="form-group">
+            <input type="number" placeholder="Введите трек-код" class="form-control" id="number" name="number" required>
+        </div>
+        <input type="hidden" name="_csrf" value="${_csrf.token}">
+        <div>
+            <button type="submit" class="btn btn-dark mr-20 ml-4">Поиск</button>
+            <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+               href="/pages/default_user_profile">
+                Назад
+            </a>
+        </div>
+    </form>
+    <hr>
+</div>
+
+    <script>
+        async function submitForm(event) {
+            event.preventDefault();
+
+            const packageNumberInput = document.getElementById('number');
+            const packageNumber = packageNumberInput.value;
+
+            try {
+                const response = await fetch(`/package/${packageNumber}`);
+                if (response.ok) {
+                    const packageData = await response.json();
+
+                    console.log('Package Data:', packageData);
+                } else {
+                    console.error('Failed to fetch package data:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching package data:', error);
+            }
+        }
+
+
+        const form = document.getElementById('searchForm');
+        form.addEventListener('submit', submitForm);
+    </script>
+{% endblock %}

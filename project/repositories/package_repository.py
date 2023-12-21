@@ -18,13 +18,22 @@ class PackageRepository:
         stmt = select(Package).where(Package.package_id == package_id)
         return await self.session.scalar(stmt)
 
+    async def get_package_by_number(self, package_number: int) -> Package:
+        stmt = select(Package).where(Package.number == package_number)
+        return await self.session.scalar(stmt)
+
+    async def get_all_package_by_sender(self, sender_login: str) -> List[Package]:
+        stmt = select(Package).where(Package.sender_login == sender_login)
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def create_package(self, package: PackageCreate) -> Package:
         async with self.session.begin_nested():
             created_package = Package(
                 number=package.number,
                 weight=package.weight,
-                sender_id=package.sender_id,
-                recipient_id=package.recipient_id,
+                sender_login=package.sender_login,
+                recipient_login=package.recipient_login,
                 status=package.status)
             self.session.add(created_package)
             await self.session.commit()

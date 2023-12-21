@@ -17,7 +17,15 @@ def create_pages_router(get_service):
         return templates.TemplateResponse("registration.html", {"request": request})
 
     @router.get("/default_user_profile")
-    def registration(request: Request):
+    def default_user_profile(request: Request):
         return templates.TemplateResponse("default_user_personal_account.html", {"request": request})
+
+    @router.get("/package_tracking")
+    def package_tracking(request: Request):
+        return templates.TemplateResponse("package_tracking.html", {"request": request})
+
+    @router.get("/package_history")
+    def package_tracking(request: Request):
+        return templates.TemplateResponse("package_history.html", {"request": request})
 
     return router

@@ -4,44 +4,39 @@
 {% endblock %}
 
 {% block content %}
-    <h1 style="text-align: center">Личный кабинет</h1>
-    <hr>
-    <br>
-    <div style="text-align: center;">
+<h1 style="text-align: center">Личный кабинет</h1>
+<hr>
+<div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+    <div>
         <h2 id="user-name"></h2>
-        <br>
+    </div>
+    <div>
         <h2>Логин: <b id="user-login"></b></h2>
-        <br>
-        <#if user.isAdmin()>
-            <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
-               href="/profile/correctionRequests">
-                Запросы на корректировку данных
-            </a><br>
-            <form id="timeReportsForm" action="/profile/timeReports/search" method="get">
-                <input type="hidden" name="_csrf" value="${_csrf.token}"/>
-                <button type="submit" style="text-align: center; width: 100%" class="btn btn-dark mb-3">
-                    Запрос на получение отчетов
-                </button>
-            </form>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
-           href="/profile/edit">
+    </div>
+    <div>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_tracking">
+            Отслеживание груза
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_history">
+            История грузов
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/edit">
             Редактировать профиль
         </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
-           href="/profile/logTime">
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/logTime">
             Зарегистрировать время
         </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
-           href="/profile/timeReports">
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/timeReports">
             Запрос на редактирование времени
         </a>
         <form id="logoutForm">
-            <input type="hidden" name="_csrf" value="${_csrf.token}"/>
+            <input type="hidden" name="_csrf" value="${_csrf.token}" />
             <button id="logoutButton" type="submit" style="text-align: center; width: 100%" class="btn btn-danger mb-2">
                 Выйти из аккаунта
             </button>
         </form>
     </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', async function() {
@@ -54,7 +49,7 @@
                 });
             if (response.ok) {
                 const user = await response.json();
-
+                localStorage.setItem('user_login', user.login);
                 document.getElementById('user-name').textContent = user.name;
                 document.getElementById('user-login').textContent = user.login;
 
@@ -64,6 +59,7 @@
                         const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
                         if (logoutResponse.ok) {
                             localStorage.removeItem('token');
+                            localStorage.removeItem('user_login');
                             window.location.href = '/pages/login';
                         } else {
                             console.error('Logout failed:', logoutResponse.status);
@@ -79,5 +75,6 @@
             console.error('Error fetching user data:', error);
         }
     });
+
 </script>
 {% endblock %}
