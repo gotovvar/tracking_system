@@ -14,12 +14,12 @@ def create_package_router(get_service) -> APIRouter:
     ):
         return await service.read_package_by_number(package_number)
 
-    @router.get("/sent/{sender_login}", response_model=List[Package])
+    @router.get("/sent/{sender_id}", response_model=List[Package])
     async def read_all_package_by_sender(
-            sender_login: str,
+            sender_id: int,
             service: PackageService = Depends(get_service)
     ):
-        return await service.read_all_package_by_sender(sender_login)
+        return await service.read_all_package_by_sender(sender_id)
 
     @router.get("/", response_model=List[Package])
     async def read_all_packages(

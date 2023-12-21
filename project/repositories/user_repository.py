@@ -5,6 +5,7 @@ from models.default_user import DefaultUser
 from models.administrator import Administrator
 from schemas.schemas import DefaultUserCreate, AdministratorCreate
 from utils.roles import Roles
+from utils.auth import get_hash_password
 
 
 class UserRepository:
@@ -41,6 +42,8 @@ class UserRepository:
         default_user = await self.get_user_by_id(default_user_id, Roles.ROLE_USER)
         if default_user:
             for key, value in update_data.model_dump(exclude_unset=True).items():
+                if key == "password":
+                    value = get_hash_password(value)
                 setattr(default_user, key, value)
             await self.session.commit()
             return default_user
@@ -86,7 +89,11 @@ class UserRepository:
     async def change_default_user_role(self, default_user_id: int) -> Administrator:
         user = await self.get_user_by_id(default_user_id, Roles.ROLE_USER)
         if user:
-            user.role = Roles.ROLE_ADMIN
-            await self.create_administrator(user)
+            administrator = Administrator(
+                name=user.name,
+                surname=user.surname,
+                login=user.login,
+                password=user.password)
+            await self.create_administrator(administrator)
             await self.delete_default_user(user.id)
             return user

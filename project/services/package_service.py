@@ -35,8 +35,8 @@ class PackageService:
     async def read_package_by_number(self, package_number: int):
         return await self._database.get_package_by_number(package_number)
 
-    async def read_all_package_by_sender(self, sender_login: str):
-        return await self._database.get_all_package_by_sender(sender_login)
+    async def read_all_package_by_sender(self, sender_id: int):
+        return await self._database.get_all_package_by_sender(sender_id)
 
     async def update_package(self, package_id: int, package: PackageCreate):
         return await self._database.update_package(package_id, package)

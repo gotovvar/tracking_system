@@ -1,0 +1,62 @@
+{% extends "index.html" %}
+
+{% block head %}
+{% endblock %}
+
+
+{% block content %}
+
+<div id="create-mode">
+    <form id="createForm">
+        <div>
+            <label for="createName"><strong>Имя:</strong></label>
+            <input type="text" id="createName" value="" required>
+        </div>
+        <div>
+            <label for="createSurname"><strong>Фамилия:</strong></label>
+            <input type="text" id="createSurname" value="" required>
+        </div>
+        <div>
+            <label for="createLogin"><strong>Логин:</strong></label>
+            <input type="text" id="createLogin" value="" required>
+        </div>
+        <div>
+            <label for="createPassword"><strong>Пароль:</strong></label>
+            <input type="text" id="createPassword" value="" required>
+        </div>
+        <button type="button" onclick="createUser()">Создать пользователя</button>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+       href="/pages/default_user_profile">
+        Назад
+    </a>
+    </form>
+</div>
+
+<script>
+    function createUser() {
+        const createdName = document.getElementById('createName').value;
+        const createdSurname = document.getElementById('createSurname').value;
+        const createdLogin = document.getElementById('createLogin').value;
+        const createdPassword = document.getElementById('createPassword').value;
+
+        fetch(`/auth/register/${createdName}/${createdSurname}/${createdLogin}/${createdPassword}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('User registered successfully.');
+            } else {
+                console.error('Registration failed.');
+            }
+        })
+        .catch(error => {
+            console.error('Error occurred during registration:', error);
+        });
+    }
+
+</script>
+
+{% endblock %}

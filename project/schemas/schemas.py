@@ -7,8 +7,8 @@ class Package(BaseModel):
     package_id: int
     number: int
     weight: float
-    sender_login: str
-    recipient_login: str
+    sender_id: int
+    recipient_id: int
     status: Status
 
     class Config:
@@ -18,8 +18,8 @@ class Package(BaseModel):
 class PackageCreate(BaseModel):
     number: int
     weight: float
-    sender_login: str
-    recipient_login: str
+    sender_id: int
+    recipient_id: int
     status: Status = Status.IN_WAREHOUSE
 
 

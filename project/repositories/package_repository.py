@@ -22,8 +22,8 @@ class PackageRepository:
         stmt = select(Package).where(Package.number == package_number)
         return await self.session.scalar(stmt)
 
-    async def get_all_package_by_sender(self, sender_login: str) -> List[Package]:
-        stmt = select(Package).where(Package.sender_login == sender_login)
+    async def get_all_package_by_sender(self, sender_id: int) -> List[Package]:
+        stmt = select(Package).where(Package.sender_id == sender_id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -32,8 +32,8 @@ class PackageRepository:
             created_package = Package(
                 number=package.number,
                 weight=package.weight,
-                sender_login=package.sender_login,
-                recipient_login=package.recipient_login,
+                sender_id=package.sender_id,
+                recipient_id=package.recipient_id,
                 status=package.status)
             self.session.add(created_package)
             await self.session.commit()

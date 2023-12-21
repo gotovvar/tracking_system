@@ -10,10 +10,10 @@ class Package(Base):
     package_id = Column(Integer, primary_key=True, autoincrement=True)
     number = Column(Integer, nullable=False)
     weight = Column(Float, nullable=False)
-    sender_login = Column(String(128), ForeignKey('default_user.login'))
-    sender = relationship('DefaultUser', foreign_keys=[sender_login],
+    sender_id = Column(Integer, ForeignKey('default_user.id'))
+    sender = relationship('DefaultUser', foreign_keys=[sender_id],
                           backref='sent_packages', cascade='save-update', single_parent=True)
-    recipient_login = Column(String(128), ForeignKey('default_user.login'))
-    recipient = relationship('DefaultUser', foreign_keys=[recipient_login],
+    recipient_id = Column(Integer, ForeignKey('default_user.id'))
+    recipient = relationship('DefaultUser', foreign_keys=[recipient_id],
                              backref='received_packages', cascade='save-update', single_parent=True)
     status = Column(Enum(Status), default=Status.IN_WAREHOUSE)

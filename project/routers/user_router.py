@@ -45,6 +45,13 @@ def create_user_router(get_service) -> APIRouter:
     ):
         return await service.delete_default_user(default_user_id)
 
+    @router.delete("/admin/{admin_id}", response_model=Administrator)
+    async def delete_admin(
+            admin_id: int,
+            service: UserService = Depends(get_service)
+    ):
+        return await service.delete_administrator(admin_id)
+
     @router.get("/administrator/{administrator_id}", response_model=Administrator)
     async def read_administrator_by_id(
             administrator_id: int,

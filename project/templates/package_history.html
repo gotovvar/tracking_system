@@ -8,15 +8,18 @@
     .table th {
         padding: 5px;
     }
+
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
         try {
+            const senderId = localStorage.getItem('user_id')
             const senderLogin = localStorage.getItem('user_login')
-            const response = await fetch(`/package/sent/${senderLogin}`);
+            const response = await fetch(`/package/sent/${senderId}`);
             if (response.ok) {
                 const packages = await response.json();
+
 
                 const tableBody = document.querySelector('#content tbody');
 
@@ -32,21 +35,29 @@
                         </tr>
                     `;
 
-                    packages.forEach(package => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${package.number}</td>
-                            <td>${package.weight}</td>
-                            <td>${package.sender_login}</td>
-                            <td>${package.recipient_login}</td>
-                            <td>${package.status}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
+                     await Promise.all(packages.map(async (package) => {
+                        const responseRecipient = await fetch(`/user/default_user/${package.recipient_id}`);
+
+                        if (responseRecipient.ok) {
+                            const recipient = await responseRecipient.json();
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${package.number}</td>
+                                <td>${package.weight}</td>
+                                <td>${senderLogin}</td>
+                                <td>${recipient.login}</td>
+                                <td>${package.status}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        } else {
+                            console.error('Failed to fetch recipient data:', responseRecipient.status);
+                        }
+                    }));
                 } else {
                     const noDataParagraph = document.createElement('p');
                     noDataParagraph.textContent = 'Ничего не найдено.';
-                    document.getElementById('content').appendChild(noDataParagraph);
+                    tableBody.appendChild(noDataParagraph);
                 }
             } else {
                 console.error('Failed to fetch package data:', response.status);
@@ -64,5 +75,9 @@
         <thead></thead>
         <tbody></tbody>
     </table>
+    <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+       href="/pages/default_user_profile">
+        Назад
+    </a>
 </div>
 {% endblock %}

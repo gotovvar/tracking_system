@@ -1,0 +1,117 @@
+{% extends "index.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div id="view-mode">
+    <h1>Профиль пользователя</h1>
+    <p><strong>Имя:</strong> <span id="user-name"></span></p>
+    <p><strong>Фамилия:</strong> <span id="user-surname"></span></p>
+    <p><strong>Логин:</strong> <span id="user-login"></span></p>
+    <p><strong>Пароль:</strong> <span id="user-password"></span></p>
+    <button onclick="switchToEditMode()">Редактировать профиль</button>
+    <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
+       href="/pages/default_user_profile">
+        Назад
+    </a>
+</div>
+
+<div id="edit-mode" style="display: none;">
+    <form id="editForm">
+        <div>
+            <label for="editName"><strong>Имя:</strong></label>
+            <input type="text" id="editName" value="" required>
+        </div>
+        <div>
+            <label for="editSurname"><strong>Фамилия:</strong></label>
+            <input type="text" id="editSurname" value="" required>
+        </div>
+        <div>
+            <label for="editLogin"><strong>Логин:</strong></label>
+            <input type="text" id="editLogin" value="" required>
+        </div>
+        <div>
+            <label for="editPassword"><strong>Пароль:</strong></label>
+            <input type="text" id="editPassword" value="" required>
+        </div>
+        <button type="button" onclick="saveChanges()">Сохранить изменения</button>
+        <button type="button" onclick="cancelEditing()">Отменить</button>
+    </form>
+</div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                const userName = localStorage.getItem('user_name');
+                const userSurname = localStorage.getItem('user_surname');
+                const userLogin = localStorage.getItem('user_login');
+                const userPassword = localStorage.getItem('user_password');
+
+                document.getElementById('editName').value = userName;
+                document.getElementById('editSurname').value = userSurname;
+                document.getElementById('editLogin').value = userLogin;
+                document.getElementById('editPassword').value = userPassword;
+
+                document.getElementById('user-name').textContent = userName;
+                document.getElementById('user-surname').textContent = userSurname;
+                document.getElementById('user-login').textContent = userLogin;
+                document.getElementById('user-password').textContent = userPassword;
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        });
+
+        function switchToEditMode() {
+        document.getElementById('view-mode').style.display = 'none';
+        document.getElementById('edit-mode').style.display = 'block';
+    }
+
+    function cancelEditing() {
+        document.getElementById('view-mode').style.display = 'block';
+        document.getElementById('edit-mode').style.display = 'none';
+    }
+
+    function saveChanges() {
+        const editedName = document.getElementById('editName').value;
+        const editedSurname = document.getElementById('editSurname').value;
+        const editedLogin = document.getElementById('editLogin').value;
+        const editedPassword = document.getElementById('editPassword').value;
+
+        const userRole = localStorage.getItem('user_role');
+        const userId = localStorage.getItem('user_id');
+
+
+        fetch(`/user/default_user/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: editedName,
+                surname: editedSurname,
+                login: editedLogin,
+                password: editedPassword,
+                role: userRole
+            }),
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user_name');
+                localStorage.removeItem('user_surname');
+                localStorage.removeItem('user_login');
+                localStorage.removeItem('user_password');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('user_role');
+                window.location.href = '/pages/login';
+            } else {
+                console.error('Failed to update user data:', response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating user data:', error);
+        });
+    }
+</script>
+{% endblock %}

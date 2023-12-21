@@ -1,8 +1,8 @@
 {% extends "index.html" %}
 
 {% block head %}
-    <title>Авторизация</title>
-    <style>
+<title>Авторизация</title>
+<style>
         body {
             display: flex;
             justify-content: center;
@@ -15,16 +15,12 @@
             width: 400px;
             height: 400px;
             padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            border: 1px solid;
+            border-radius: 30px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
         }
 
         label {
@@ -52,31 +48,32 @@
         h2 {
             margin-top: 20px;
         }
-    </style>
+
+</style>
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1 style="text-align: center">Авторизация</h1>
-        <hr>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="login">Логин</label>
-                <input type="text" class="form-control" id="login" name="login" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <input type="hidden" name="_csrf" value="${_csrf.token}">
-            <button type="submit" class="btn btn-dark">Войти</button>
-        </form>
-        <hr>
-        <div style="text-align: center;">
-            <h2>Нет аккаунта на сайте - <a href="/pages/registration">Зарегистрируйтесь!</a></h2>
+<div class="container">
+    <h1 style="text-align: center">Авторизация</h1>
+    <hr>
+    <form id="loginForm">
+        <div class="modal-content">
+            <label for="login">Логин</label>
+            <input type="text" class="form-control" id="login" name="login" required>
         </div>
+        <div class="modal-content">
+            <label for="password">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <input type="hidden" name="_csrf" value="${_csrf.token}">
+        <button type="submit" class="btn btn-dark">Войти</button>
+    </form>
+    <hr>
+    <div style="text-align: center;">
+        <h2>Нет аккаунта на сайте -<a href="/pages/registration">Зарегистрируйтесь!</a></h2>
     </div>
-    <script>
+</div>
+<script>
         async function submitForm(event) {
             event.preventDefault();
 
@@ -85,6 +82,8 @@
 
             const login = loginInput.value;
             const password = passwordInput.value;
+            localStorage.setItem('user_password', password);
+
 
             const formData = new URLSearchParams();
             formData.append('grand_type', '');
@@ -120,6 +119,7 @@
 
         const form = document.getElementById('loginForm');
         form.addEventListener('submit', submitForm);
-    </script>
+
+</script>
 
 {% endblock %}

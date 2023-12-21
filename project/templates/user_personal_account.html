@@ -13,22 +13,10 @@
     <div>
         <h2>Логин: <b id="user-login"></b></h2>
     </div>
+
+    <div id="user-view">
+    </div>
     <div>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_tracking">
-            Отслеживание груза
-        </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_history">
-            История грузов
-        </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/edit">
-            Редактировать профиль
-        </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/logTime">
-            Зарегистрировать время
-        </a>
-        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/profile/timeReports">
-            Запрос на редактирование времени
-        </a>
         <form id="logoutForm">
             <input type="hidden" name="_csrf" value="${_csrf.token}" />
             <button id="logoutButton" type="submit" style="text-align: center; width: 100%" class="btn btn-danger mb-2">
@@ -36,6 +24,7 @@
             </button>
         </form>
     </div>
+
 </div>
 
 <script>
@@ -49,9 +38,37 @@
                 });
             if (response.ok) {
                 const user = await response.json();
+                localStorage.setItem('user_id', user.id);
+                localStorage.setItem('user_name', user.name);
+                localStorage.setItem('user_surname', user.surname);
                 localStorage.setItem('user_login', user.login);
+                localStorage.setItem('user_role', user.role);
                 document.getElementById('user-name').textContent = user.name;
                 document.getElementById('user-login').textContent = user.login;
+
+                if (user.role === 'ROLE_USER') {
+    document.getElementById('user-view').innerHTML += `
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_tracking">
+            Отслеживание груза
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/package_history">
+            История грузов
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/profile">
+            Профиль
+        </a>
+    `;
+} else {
+    document.getElementById('user-view').innerHTML += `
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/user_list">
+            Список пользователей
+        </a>
+        <a class="btn btn-dark mb-3" style="text-align: center; width: 100%" href="/pages/create_user">
+            Создать учетную запись
+        </a>
+    `;
+}
+
 
                 document.getElementById('logoutButton').addEventListener('click', async function(event) {
                     event.preventDefault();
@@ -59,7 +76,12 @@
                         const logoutResponse = await fetch('/auth/logout', { method: 'POST' });
                         if (logoutResponse.ok) {
                             localStorage.removeItem('token');
+                            localStorage.removeItem('user_name');
+                            localStorage.removeItem('user_surname');
                             localStorage.removeItem('user_login');
+                            localStorage.removeItem('user_password');
+                            localStorage.removeItem('user_id');
+                            localStorage.removeItem('user_role');
                             window.location.href = '/pages/login';
                         } else {
                             console.error('Logout failed:', logoutResponse.status);
@@ -75,6 +97,7 @@
             console.error('Error fetching user data:', error);
         }
     });
+
 
 </script>
 {% endblock %}
