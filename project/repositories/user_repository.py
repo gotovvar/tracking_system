@@ -100,10 +100,11 @@ class UserRepository:
                     update(DefaultUser)
                     .where(DefaultUser.id == default_user_id)
                     .values(update_data.dict(exclude_unset=True))
+                    .returning(DefaultUser)
                 )
-                await session.execute(update_stmt)
+                updated_user = await session.execute(update_stmt)
                 await session.commit()
-                return default_user
+                return updated_user.scalar()
             else:
                 raise ValueError("User not found.")
 

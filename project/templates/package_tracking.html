@@ -13,7 +13,7 @@
 
         .container {
             width: 400px;
-            height: 400px;
+            height: 620px;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -52,6 +52,19 @@
             margin-top: 20px;
         }
 
+        .menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .packageInfo {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
 </style>
 {% endblock %}
 
@@ -65,8 +78,8 @@
             <input type="number" placeholder="Введите трек-код" class="form-control" id="number" name="number" required>
         </div>
         <input type="hidden" name="_csrf" value="${_csrf.token}">
-        <div>
-            <button type="submit" class="btn btn-dark mr-20 ml-4">Поиск</button>
+        <div class="menu">
+            <button type="submit" class="btn btn-dark">Поиск</button>
             <a class="btn btn-dark mb-3" style="text-align: center; width: 100%"
                href="/pages/default_user_profile">
                 Назад
@@ -74,14 +87,13 @@
         </div>
     </form>
     <hr>
-    <div id="packageInfo"></div>
+    <div class="packageInfo" id="packageInfo"></div>
 </div>
 
     <script>
     async function submitForm(event) {
         event.preventDefault();
 
-        const senderLogin = localStorage.getItem('user_login')
         const packageNumberInput = document.getElementById('number');
         const packageNumber = packageNumberInput.value;
 
@@ -90,23 +102,30 @@
             if (response.ok) {
                 const packageData = await response.json();
 
-                const responseRecipient = await fetch(`/user/default_user/${packageData.recipient_id}`);
-                if (responseRecipient.ok) {
-                    const recipientData = await responseRecipient.json();
+                const responseSender = await fetch(`/user/default_user/${packageData.sender_id}`);
+                if (responseSender.ok) {
+                    const senderData = await responseSender.json();
 
-                    const packageInfoContainer = document.getElementById('packageInfo');
-                    packageInfoContainer.innerHTML = `
-                        <h2>Информация о посылке:</h2>
-                        <p>Номер посылки: ${packageData.number}</p>
-                        <p>Вес: ${packageData.weight}</p>
-                        <p>Отправитель: ${senderLogin}</p>
-                        <p>Получатель: ${recipientData.login}</p>
-                        <p>Статус: ${packageData.status}</p>
-                    `;
-                    console.log('Package Data:', packageData);
+                    const responseRecipient = await fetch(`/user/default_user/${packageData.recipient_id}`);
+                    if (responseRecipient.ok) {
+                        const recipientData = await responseRecipient.json();
 
+                        const packageInfoContainer = document.getElementById('packageInfo');
+                        packageInfoContainer.innerHTML = `
+                            <h2>Информация о посылке:</h2>
+                            <p>Номер посылки: ${packageData.number}</p>
+                            <p>Вес: ${packageData.weight}</p>
+                            <p>Отправитель: ${senderData.login}</p>
+                            <p>Получатель: ${recipientData.login}</p>
+                            <p>Статус: ${packageData.status}</p>
+                        `;
+                        console.log('Package Data:', packageData);
+
+                    } else {
+                        console.error('Failed to fetch recipient data:', responseRecipient.status);
+                    }
                 } else {
-                    console.error('Failed to fetch recipient data:', responseRecipient.status);
+                    console.error('Failed to fetch sender data:', responseSender.status);
                 }
             } else {
                 console.error('Failed to fetch package data:', response.status);
@@ -119,5 +138,6 @@
     const form = document.getElementById('searchForm');
     form.addEventListener('submit', submitForm);
 </script>
+
 
 {% endblock %}

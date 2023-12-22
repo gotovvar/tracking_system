@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sqlalchemy import select
+from sqlalchemy import select, update
 from typing import List
 from models.package import Package
 from schemas.schemas import PackageCreate
@@ -76,10 +76,15 @@ class PackageRepository(AbstractPackageRepository):
         async with db_async_session_maker() as session:
             package = await self.get_package_by_id(package_id)
             if package is not None:
-                for key, value in update_data.model_dump(exclude_unset=True).items():
-                    setattr(package, key, value)
+                update_stmt = (
+                    update(Package)
+                    .where(Package.package_id == package_id)
+                    .values(update_data.dict(exclude_unset=True))
+                    .returning(Package)
+                )
+                updated_package = await session.execute(update_stmt)
                 await session.commit()
-                return package
+                return updated_package.scalar()
             else:
                 raise ValueError("Package not found.")
 
