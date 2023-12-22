@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
-from services.user_service import UserService
 
 
-def create_pages_router(get_service):
+def create_pages_router():
     router = APIRouter()
 
     templates = Jinja2Templates(directory="templates")

@@ -1,81 +1,59 @@
 from fastapi import APIRouter, Depends
-from services.user_service import UserService
-from schemas.schemas import DefaultUserCreate, DefaultUser, Administrator, AdministratorCreate
 from typing import List
+from services.user_service import UserService
+from schemas.schemas import DefaultUser, DefaultUserCreate, Administrator, AdministratorCreate
 from utils.roles import Roles
 
 
-def create_user_router(get_service) -> APIRouter:
-    router = APIRouter()
+class UserRouter(APIRouter):
+    def __init__(self, user_service: UserService, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_service = user_service
+        self.setup_routes()
 
-    @router.get("/default_user/{default_user_id}", response_model=DefaultUser)
-    async def read_default_user_by_id(
-            default_user_id: int,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.read_user_by_id(default_user_id, Roles.ROLE_USER)
+    def setup_routes(self):
+        self.add_api_route("/default_user/{default_user_id}", self.read_default_user_by_id, methods=["GET"], response_model=DefaultUser)
+        self.add_api_route("/default_user_login/{default_user_login}", self.read_default_user_by_login, methods=["GET"], response_model=DefaultUser)
+        self.add_api_route("/default_user", self.read_all_default_users, methods=["GET"], response_model=List[DefaultUser])
+        self.add_api_route("/default_user", self.create_default_user, methods=["POST"], response_model=DefaultUser)
+        self.add_api_route("/default_user/{default_user_id}", self.update_default_user, methods=["PUT"], response_model=DefaultUser)
+        self.add_api_route("/{default_user_id}", self.delete_default_user, methods=["DELETE"], response_model=DefaultUser)
 
-    @router.get("/default_user_login/{default_user_login}", response_model=DefaultUser)
-    async def read_default_user_by_login(
-            default_user_login: str,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.read_default_user_by_login(default_user_login)
+        self.add_api_route("/admin/{admin_id}", self.delete_admin, methods=["DELETE"], response_model=Administrator)
+        self.add_api_route("/administrator/{administrator_id}", self.read_administrator_by_id, methods=["GET"], response_model=Administrator)
+        self.add_api_route("/administrator/login/{administrator_login}", self.read_administrator_by_login, methods=["GET"], response_model=Administrator)
+        self.add_api_route("/administrator", self.update_administrator, methods=["PUT"], response_model=Administrator)
+        self.add_api_route("/administrator/{default_user_id}", self.change_default_user_role, methods=["POST"], response_model=Administrator)
 
-    @router.get("/default_user", response_model=List[DefaultUser])
-    async def read_all_default_users(
-            service: UserService = Depends(get_service)
-    ):
-        return await service.read_all_default_users()
+    async def read_default_user_by_id(self, default_user_id: int):
+        return await self.user_service.read_user_by_id(default_user_id, Roles.ROLE_USER)
 
-    @router.post("/default_user", response_model=DefaultUser)
-    async def create_default_user(default_user: DefaultUserCreate,
-                                  service: UserService = Depends(get_service)):
-        return await service.create_default_user(default_user)
+    async def read_default_user_by_login(self, default_user_login: str):
+        return await self.user_service.read_default_user_by_login(default_user_login)
 
-    @router.put("/default_user/{default_user_id}", response_model=DefaultUser)
-    async def update_default_user(default_user_id: int, default_user: DefaultUserCreate,
-                                  service: UserService = Depends(get_service)):
-        return await service.update_default_user(default_user_id, default_user)
+    async def read_all_default_users(self):
+        return await self.user_service.read_all_default_users()
 
-    @router.delete("/{default_user_id}", response_model=DefaultUser)
-    async def delete_default_user(
-            default_user_id: int,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.delete_default_user(default_user_id)
+    async def create_default_user(self, default_user: DefaultUserCreate):
+        return await self.user_service.create_default_user(default_user)
 
-    @router.delete("/admin/{admin_id}", response_model=Administrator)
-    async def delete_admin(
-            admin_id: int,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.delete_administrator(admin_id)
+    async def update_default_user(self, default_user_id: int, default_user: DefaultUserCreate):
+        return await self.user_service.update_default_user(default_user_id, default_user)
 
-    @router.get("/administrator/{administrator_id}", response_model=Administrator)
-    async def read_administrator_by_id(
-            administrator_id: int,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.read_user_by_id(administrator_id, Roles.ROLE_ADMIN)
+    async def delete_default_user(self, default_user_id: int):
+        return await self.user_service.delete_default_user(default_user_id)
 
-    @router.get("/administrator/login/{administrator_login}", response_model=Administrator)
-    async def read_administrator_by_login(
-            administrator_login: str,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.read_administrator_by_login(administrator_login)
+    async def delete_admin(self, admin_id: int):
+        return await self.user_service.delete_administrator(admin_id)
 
-    @router.put("/administrator", response_model=Administrator)
-    async def update_administrator(administrator_id: int, administrator: AdministratorCreate,
-                                   service: UserService = Depends(get_service)):
-        return await service.update_administrator(administrator_id, administrator)
+    async def read_administrator_by_id(self, administrator_id: int):
+        return await self.user_service.read_user_by_id(administrator_id, Roles.ROLE_ADMIN)
 
-    @router.post("/administrator/{default_user_id}", response_model=Administrator)
-    async def change_default_user_role(
-            default_user_id: int,
-            service: UserService = Depends(get_service)
-    ):
-        return await service.change_default_user_role(default_user_id)
+    async def read_administrator_by_login(self, administrator_login: str):
+        return await self.user_service.read_administrator_by_login(administrator_login)
 
-    return router
+    async def update_administrator(self, administrator_id: int, administrator: AdministratorCreate):
+        return await self.user_service.update_administrator(administrator_id, administrator)
+
+    async def change_default_user_role(self, default_user_id: int):
+        return await self.user_service.change_default_user_role(default_user_id)

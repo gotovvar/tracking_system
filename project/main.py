@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from database.database import async_engine
 from services.user_service import UserService
 from services.package_service import PackageService
-from routers.user_router import create_user_router
-from routers.package_router import create_package_router
+from repositories.package_repository import PackageRepository
+from repositories.user_repository import UserRepository
+from routers.user_router import UserRouter
+from routers.package_router import PackageRouter
 from routers.auth import create_auth_router
 from routers.pages import create_pages_router
 
@@ -21,32 +21,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SessionLocal = async_sessionmaker(expire_on_commit=False, bind=async_engine)
 
+user_service = UserService(UserRepository)
 
-async def get_package_service():
-    async with SessionLocal() as session:
-        async with session.begin():
-            service = PackageService(session)
-            yield service
-
-
-async def get_user_service():
-    async with SessionLocal() as session:
-        async with session.begin():
-            service = UserService(session)
-            yield service
-
-user_router = create_user_router(get_user_service)
+user_router = UserRouter(user_service)
 app.include_router(user_router, prefix="/user", tags=["user"])
 
-package_route = create_package_router(get_package_service)
+package_service = PackageService(PackageRepository)
+
+package_route = PackageRouter(package_service)
 app.include_router(package_route, prefix="/package", tags=["package"])
 
-auth_route = create_auth_router(get_user_service)
+auth_route = create_auth_router(user_service)
 app.include_router(auth_route, prefix="/auth", tags=["auth"])
 
-pages_route = create_pages_router(get_user_service)
+pages_route = create_pages_router()
 app.include_router(pages_route, prefix="/pages", tags=["pages"])
 
 """
